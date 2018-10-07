@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<style>
+		#cont{
+			width: 400px;
+			height: 400px;
+			margin-top: 100px;
+			border: 1px solid gray;
+			overflow: hidden; 
+		}
+		#main{
+			width: 400px;
+			height: 400px;
+			position: relative;
+			top: -100px;
+		}
+		.row{
+			height: 100px;
+		}
+		.row div{
+			width: 98px;
+			height: 98px;
+			border:1px solid gray;
+			float: left;
+		}
+		.black{
+			background: black;
+		}
+	</style>
+</head>
+<body>
+<input type="button" id="ting" value="停">
+<input type="button" id="kaishi" value="开始"><br>
+<input type="text" id="fen" value="0" disabled>
+	<div id="cont">
+		<div id="main"></div>
+	</div>
+	
+</body>
+<script>
+
+	function Youxi(){
+
+		//获取main
+		this.main = document.getElementById('main');
+		this.clock; //定时器
+		this.over = false; //设置游戏状态
+		this.sudu = 1; //下降速度
+
+		//创建div的方法
+		this.cdiv = function(classNames){
+			var div = document.createElement('div');
+			if(classNames){
+				div.className = classNames;
+			}
+			return div;
+		}
+
+		//创建一行div的方法
+		this.crow = function(){
+			var row_div = this.cdiv('row');
+			//生成随机数
+			var k = Math.floor(Math.random()*4);
+			//利用随机数做判断，创建一行div中的4个小div
+			for(var i=0;i<4;i++){
+				if(i == k){
+					row_div.appendChild(this.cdiv('black'));
+				}else{
+					row_div.appendChild(this.cdiv());
+				}
+			}
+			return row_div;
+		}
+
+		//游戏初始化
+		this.init = function(){
+			//默认生成4行
+			for(var i=0;i<4;i++){
+				this.main.appendChild(this.crow());
+			}
+			//构造方法中只能有方法和属性，如果定时器在外面，只要一new就会执行，new的目的是得到一个对象 ，所以把它放在初始化方法中，创建对象后，调用初始化方法
+			//告诉浏览器（window对象）每隔10毫秒，去执行'start.move()'代码
+			//start对象去调用clock方法，而浏览器执行clock方法，如果是this.move的话，此时浏览器在执行时，this指向的是window对象
+			this.clock = setInterval('start.move()',10);
+			//绑定点击事件
+			this.clicks();
+		}
+
+		//点击事件绑定的方法
+		this.clicks = function(){
+			//在事件处理程序中，我们需要本对象，所有用that替代this
+			var that =this;
+			this.main.onclick = function(ev){
+				//事件委托获取事件触发的节点
+				var fou = ev.target;
+				//游戏结束不可点击
+				if(that.over == true){
+					alert('别挣扎了，游戏结束');
+				}else if(fou.className == 'black'){
+					//如果点击黑块，加分
+					var fen = document.getElementById('fen');
+					var score = parseInt(fen.value)
+					//加分 判断 ，每当得到10分，游戏加速
+					fen.value = ++score;
+					if(score % 10 == 0){
+						that.sudu += 0.5;
+					}
+					fou.className = "";
+					fou.parentNode.pass = true;
+
+				}else{
+					//如果点击的不是黑块，停止游戏
+					that.stop();
+					//游戏结束，修改游戏状态
+					that.over = true;
+					alert('游戏结束');
+				}
+			}
+		}
+
+		//游戏停止
+		this.stop = function(){
+			clearInterval(start.clock);
+		}
+
+		//main动起来
+		this.move = function(){
+			//获取main这个div的top属性
+			var topInt = parseInt(getComputedStyle(this.main)['top']);
+
+			//当top值等于0时，就会添加一行，并修改top值 -100px
+			if(topInt > 0){
+
+				//给main添加一行div，添加到第一个子节点之前
+				this.main.insertBefore(this.crow(),this.main.firstChild);
+
+				//并将main  top的值改为-100px  这是topInt中获取到的top值就是 -100px
+				this.main.style.top = '-100px';
+				//判断有没有点击这一行
+				if(this.main.lastChild.pass == undefined){
+					this.stop();
+					this.over = true;
+					alert('游戏结束');
+				}else{
+					 if(this.main.children.length>5){
+						this.main.removeChild(this.main.lastChild);
+					}
+				}
+
+			}else{
+				//动态获取下降速度
+				this.main.style.top = topInt+this.sudu+'px';
+			}
+			
+		}
+
+	}
+	//创建start对象
+	var start = new Youxi();
+	
+	//调用初始化方法
+	document.getElementById('ting').onclick = function(){
+		clearInterval(start.clock);
+	}
+	//点击开始，调用初始化方法 点击按钮，开始游戏
+	document.getElementById('kaishi').onclick = function(){
+		start.init();
+	}
+	
+</script>
+</html>
